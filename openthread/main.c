@@ -33,7 +33,6 @@
 
 #define ENABLE_DEBUG (1)
 #include "debug.h"
-
 uint32_t interval_with_jitter(void)
 {
     int32_t t = SAMPLE_INTERVAL;
@@ -41,7 +40,7 @@ uint32_t interval_with_jitter(void)
     t -= (SAMPLE_JITTER >> 1);
     return (uint32_t)t;
 }
-
+uint32_t rtchangeCt = 0;
 int main(void)
 {
 #if DMAC_ENABLE
@@ -51,8 +50,9 @@ int main(void)
     spi_set_dma_channel(0,DMAC_CHANNEL_SPI_TX,DMAC_CHANNEL_SPI_RX);
 #endif 
     DEBUG("This a test for OpenThread\n");    
-    xtimer_usleep(300000000ul);
+    //xtimer_usleep(300000000ul);
 
+    xtimer_usleep(3000ul);
     DEBUG("[Main] Start UDP\n");    
     // get openthread instance
 	otUdpSocket mSocket;
@@ -75,7 +75,12 @@ int main(void)
     }
     buf[19] = 0;
     buf[18] = 0;
-        
+
+    // Routing table changed on packet send.
+    buf[17] = 0;    
+    buf[16] = 0;
+    buf[15] = 0;
+    buf[14] = 0;
 	while (1) {
 		//Sample
 	    //sample(&frontbuf);
@@ -83,6 +88,7 @@ int main(void)
 		//Sleep
         xtimer_usleep(interval_with_jitter());
         
+
 		//Send
         message = otUdpNewMessage(sInstance, true);
         if (message == NULL) {
@@ -94,6 +100,14 @@ int main(void)
         if (buf[19] == 0) {
             buf[18]++;
         }       
+
+        // Update routing table change number
+        buf[14] = rtchangeCt & 0xff;
+        buf[15] = (rtchangeCt >> 8) & 0xff;
+        buf[16] = (rtchangeCt >> 16) & 0xff;
+        buf[17] = (rtchangeCt >> 24) & 0xff;
+
+        printf("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA%lu\n",rtchangeCt);
         // Source addr setting
         uint8_t source = OPENTHREAD_SOURCE;
         buf[0] = source;
