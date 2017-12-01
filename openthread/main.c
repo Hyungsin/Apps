@@ -18,6 +18,7 @@
 #include "ot.h"
 #include <openthread/udp.h>
 #include <openthread/cli.h>
+#include <openthread/thread.h>
 #include <openthread/openthread.h>
 #include <openthread/platform/platform.h>
 #include <openthread/platform/logging.h>
@@ -81,6 +82,12 @@ int main(void)
     buf[16] = 0;
     buf[15] = 0;
     buf[14] = 0;
+
+    // next hop
+    buf[13] = 0;
+    // link quality out
+    buf[12] = 0;
+
 	while (1) {
 		//Sample
 	    //sample(&frontbuf);
@@ -108,6 +115,13 @@ int main(void)
         buf[17] = (rtchangeCt >> 24) & 0xff;
 
         printf("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA%lu\n",rtchangeCt);
+
+        // Link quality and next hop
+        otRouterInfo routerInfo;
+        otThreadGetParentInfo(sInstance, &routerInfo);
+        buf[12] = routerInfo.mLinkQualityOut
+        buf[13] = routerInfo.mNextHop
+        
         // Source addr setting
         uint8_t source = OPENTHREAD_SOURCE;
         buf[0] = source;
