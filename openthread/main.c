@@ -47,6 +47,8 @@ uint32_t joiningMsgCnt = 0;
 uint32_t routingMsgCnt = 0;
 uint32_t linkMsgCnt = 0;
 uint32_t controlMsgCnt = 0;
+uint32_t packetSuccessCnt = 0;
+uint32_t packetFailCnt = 0;
 
 int main(void)
 {
@@ -57,9 +59,9 @@ int main(void)
     spi_set_dma_channel(0,DMAC_CHANNEL_SPI_TX,DMAC_CHANNEL_SPI_RX);
 #endif 
     DEBUG("This a test for OpenThread\n");    
-    //xtimer_usleep(300000000ul);
+    xtimer_usleep(300000000ul);
 
-    xtimer_usleep(3000ul);
+    //xtimer_usleep(3000ul);
     DEBUG("[Main] Start UDP\n");    
     // get openthread instance
 	otUdpSocket mSocket;
@@ -76,12 +78,12 @@ int main(void)
 	otIp6AddressFromString("fdde:ad00:beef:0000:c684:4ab6:ac8f:9fe5", &messageInfo.mPeerAddr);
     messageInfo.mPeerPort = 1234;
     messageInfo.mInterfaceId = 1;
-    char buf[30];
-    for (int i =0; i<30; i++) {
+    char buf[36];
+    for (int i =0; i<36; i++) {
         buf[i] = 0xff;
     }
 
-    for (int i = 0; i < 28; i++) {
+    for (int i = 0; i < 36; i++) {
         buf[i] = 0x0;
     }
 	
@@ -99,7 +101,6 @@ int main(void)
             printf("error in new message");
         }
         
-        
         // Tx Sequence number setting
         buf[19]++;
         if (buf[19] == 0) {
@@ -107,10 +108,10 @@ int main(void)
         }       
 
         // Address message counts
-        buf[14] = addressMsgCnt & 0xff;
-        buf[15] = (addressMsgCnt >> 8) & 0xff;
-        buf[16] = (addressMsgCnt >> 16) & 0xff;
-        buf[17] = (addressMsgCnt >> 24) & 0xff;
+        buf[17] = addressMsgCnt & 0xff;
+        buf[16] = (addressMsgCnt >> 8) & 0xff;
+        buf[15] = (addressMsgCnt >> 16) & 0xff;
+        buf[14] = (addressMsgCnt >> 24) & 0xff;
 
         // next hop change number
         buf[13] = borderRouteChangeCnt;
@@ -123,25 +124,35 @@ int main(void)
         buf[11] = routerInfo.mLinkQualityOut;
         buf[12] = routerInfo.mNextHop;
 
-        buf[5] = joiningMsgCnt & 0xff;
-        buf[6] = (joiningMsgCnt >> 8) & 0xff; 
-        buf[7] = (joiningMsgCnt >> 16) & 0xff; 
-        buf[8] = (joiningMsgCnt >> 24) & 0xff; 
+        buf[8] = joiningMsgCnt & 0xff;
+        buf[7] = (joiningMsgCnt >> 8) & 0xff; 
+        buf[6] = (joiningMsgCnt >> 16) & 0xff; 
+        buf[5] = (joiningMsgCnt >> 24) & 0xff; 
 
-        buf[1] = routingMsgCnt & 0xff;
-        buf[2] = (routingMsgCnt >> 8) & 0xff; 
-        buf[3] = (routingMsgCnt >> 16) & 0xff; 
-        buf[4] = (routingMsgCnt >> 24) & 0xff;
+        buf[4] = routingMsgCnt & 0xff;
+        buf[3] = (routingMsgCnt >> 8) & 0xff; 
+        buf[2] = (routingMsgCnt >> 16) & 0xff; 
+        buf[1] = (routingMsgCnt >> 24) & 0xff;
 
-        buf[20] = linkMsgCnt & 0xff;
-        buf[21] = (linkMsgCnt >> 8) & 0xff; 
-        buf[22] = (linkMsgCnt >> 16) & 0xff; 
-        buf[23] = (linkMsgCnt >> 24) & 0xff;
+        buf[23] = linkMsgCnt & 0xff;
+        buf[22] = (linkMsgCnt >> 8) & 0xff; 
+        buf[21] = (linkMsgCnt >> 16) & 0xff; 
+        buf[20] = (linkMsgCnt >> 24) & 0xff;
 
-        buf[24] = controlMsgCnt & 0xff;
-        buf[25] = (controlMsgCnt >> 8) & 0xff; 
-        buf[26] = (controlMsgCnt >> 16) & 0xff; 
-        buf[27] = (controlMsgCnt >> 24) & 0xff;
+        buf[27] = controlMsgCnt & 0xff;
+        buf[26] = (controlMsgCnt >> 8) & 0xff; 
+        buf[25] = (controlMsgCnt >> 16) & 0xff; 
+        buf[24] = (controlMsgCnt >> 24) & 0xff;
+
+        buf[31] = packetSuccessCnt & 0xff;
+        buf[30] = (packetSuccessCnt >> 8) & 0xff; 
+        buf[29] = (packetSuccessCnt >> 16) & 0xff; 
+        buf[28] = (packetSuccessCnt >> 24) & 0xff;
+
+        buf[35] = packetFailCnt & 0xff;
+        buf[34] = (packetFailCnt >> 8) & 0xff; 
+        buf[33] = (packetFailCnt >> 16) & 0xff; 
+        buf[32] = (packetFailCnt >> 24) & 0xff;
 
 
         printf("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC PATH COST: %hu\n", routerInfo.mPathCost);
@@ -158,11 +169,11 @@ int main(void)
         // Source addr setting
         uint8_t source = OPENTHREAD_SOURCE;
         buf[0] = source;
-        error = otMessageSetLength(message, 30);
+        error = otMessageSetLength(message, 36);
         if (error != OT_ERROR_NONE) {
             printf("error in set length\n");
         }
-        otMessageWrite(message, 0, buf, 30);
+        otMessageWrite(message, 0, buf, 36);
 		
         DEBUG("[Main] Tx UDP packet\n");
         error = otUdpSend(&mSocket, message, &messageInfo);
