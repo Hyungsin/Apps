@@ -42,6 +42,9 @@ uint32_t interval_with_jitter(void)
     return (uint32_t)t;
 }
 uint8_t borderRouteChangeCnt = 0;
+uint8_t borderRouterLC = 0;
+
+
 uint32_t addressMsgCnt = 0;
 uint32_t joiningMsgCnt = 0;
 uint32_t routingMsgCnt = 0;
@@ -49,6 +52,8 @@ uint32_t linkMsgCnt = 0;
 uint32_t controlMsgCnt = 0;
 uint32_t packetSuccessCnt = 0;
 uint32_t packetFailCnt = 0;
+uint32_t packetBusyChannelCnt = 0;
+uint32_t broadcastCnt = 0;
 
 int main(void)
 {
@@ -78,12 +83,12 @@ int main(void)
 	otIp6AddressFromString("fdde:ad00:beef:0000:c684:4ab6:ac8f:9fe5", &messageInfo.mPeerAddr);
     messageInfo.mPeerPort = 1234;
     messageInfo.mInterfaceId = 1;
-    char buf[36];
-    for (int i =0; i<36; i++) {
+    char buf[44];
+    for (int i =0; i<44; i++) {
         buf[i] = 0xff;
     }
 
-    for (int i = 0; i < 36; i++) {
+    for (int i = 0; i < 44; i++) {
         buf[i] = 0x0;
     }
 	
@@ -117,12 +122,16 @@ int main(void)
         buf[13] = borderRouteChangeCnt;
 
         // Link quality, next hop, path cost
-        otRouterInfo routerInfo;
-        otThreadGetParentInfo(sInstance, &routerInfo);
-        buf[9] = routerInfo.mPathCost;
-        buf[10] = routerInfo.mLinkQualityIn;
-        buf[11] = routerInfo.mLinkQualityOut;
-        buf[12] = routerInfo.mNextHop;
+        // otRouterInfo routerInfo;
+        // otThreadGetParentInfo(sInstance, &routerInfo);
+        // buf[9] = routerInfo.mPathCost;
+        // buf[10] = routerInfo.mLinkQualityIn;
+        // buf[11] = routerInfo.mLinkQualityOut;
+        // buf[12] = routerInfo.mNextHop;
+
+        buf[9] = borderRouterLC;
+        // buf[10] = border
+
 
         buf[8] = joiningMsgCnt & 0xff;
         buf[7] = (joiningMsgCnt >> 8) & 0xff; 
@@ -154,11 +163,18 @@ int main(void)
         buf[33] = (packetFailCnt >> 16) & 0xff; 
         buf[32] = (packetFailCnt >> 24) & 0xff;
 
+        buf[39] = packetBusyChannelCnt & 0xff;
+        buf[38] = (packetBusyChannelCnt >> 8) & 0xff; 
+        buf[37] = (packetBusyChannelCnt >> 16) & 0xff; 
+        buf[36] = (packetBusyChannelCnt >> 24) & 0xff;
 
-        printf("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC PATH COST: %hu\n", routerInfo.mPathCost);
-        printf("DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD LQ IN: %hu\n", routerInfo.mLinkQualityIn);
-        printf("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE LQ OUT: %hu\n", routerInfo.mLinkQualityOut);
-        printf("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF NEXT HOP: %hu\n", routerInfo.mNextHop);
+        buf[43] = broadcastCnt & 0xff;
+        buf[42] = (broadcastCnt >> 8) & 0xff; 
+        buf[41] = (broadcastCnt >> 16) & 0xff; 
+        buf[40] = (broadcastCnt >> 24) & 0xff;
+
+        printf("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC LINK COST: %hu\n", borderRouterLC);
+        //printf("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF NEXT HOP: %hu\n", routerInfo.mNextHop);
         printf("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA BORDER ROUTER NEXT HOP CHANGE CNT: %hu\n", borderRouteChangeCnt);
         printf("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA ADDRESS MSG CNT: %lu\n", addressMsgCnt);
         printf("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA JOINING MSG CNT: %lu\n", joiningMsgCnt);
@@ -169,11 +185,11 @@ int main(void)
         // Source addr setting
         uint8_t source = OPENTHREAD_SOURCE;
         buf[0] = source;
-        error = otMessageSetLength(message, 36);
+        error = otMessageSetLength(message, 44);
         if (error != OT_ERROR_NONE) {
             printf("error in set length\n");
         }
-        otMessageWrite(message, 0, buf, 36);
+        otMessageWrite(message, 0, buf, 44);
 		
         DEBUG("[Main] Tx UDP packet\n");
         error = otUdpSend(&mSocket, message, &messageInfo);
