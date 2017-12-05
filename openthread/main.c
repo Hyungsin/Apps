@@ -43,7 +43,8 @@ uint32_t interval_with_jitter(void)
 }
 uint8_t borderRouteChangeCnt = 0;
 uint8_t borderRouterLC = 0;
-
+uint8_t brCacheIndex = 0;
+char nexthopBuffer[32];
 
 uint32_t addressMsgCnt = 0;
 uint32_t joiningMsgCnt = 0;
@@ -83,12 +84,12 @@ int main(void)
 	otIp6AddressFromString("fdde:ad00:beef:0000:c684:4ab6:ac8f:9fe5", &messageInfo.mPeerAddr);
     messageInfo.mPeerPort = 1234;
     messageInfo.mInterfaceId = 1;
-    char buf[44];
-    for (int i =0; i<44; i++) {
+    char buf[76];
+    for (int i =0; i<76; i++) {
         buf[i] = 0xff;
     }
 
-    for (int i = 0; i < 44; i++) {
+    for (int i = 0; i < 76; i++) {
         buf[i] = 0x0;
     }
 	
@@ -173,8 +174,11 @@ int main(void)
         buf[41] = (broadcastCnt >> 16) & 0xff; 
         buf[40] = (broadcastCnt >> 24) & 0xff;
 
+        for (int i = 0; i < 32; i++) {
+            buf[i+44] = nexthopBuffer[i];
+        }
+
         printf("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC LINK COST: %hu\n", borderRouterLC);
-        //printf("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF NEXT HOP: %hu\n", routerInfo.mNextHop);
         printf("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA BORDER ROUTER NEXT HOP CHANGE CNT: %hu\n", borderRouteChangeCnt);
         printf("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA ADDRESS MSG CNT: %lu\n", addressMsgCnt);
         printf("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA JOINING MSG CNT: %lu\n", joiningMsgCnt);
@@ -185,11 +189,11 @@ int main(void)
         // Source addr setting
         uint8_t source = OPENTHREAD_SOURCE;
         buf[0] = source;
-        error = otMessageSetLength(message, 44);
+        error = otMessageSetLength(message, 76);
         if (error != OT_ERROR_NONE) {
             printf("error in set length\n");
         }
-        otMessageWrite(message, 0, buf, 44);
+        otMessageWrite(message, 0, buf, 76);
 		
         DEBUG("[Main] Tx UDP packet\n");
         error = otUdpSend(&mSocket, message, &messageInfo);
