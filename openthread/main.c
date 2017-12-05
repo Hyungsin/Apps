@@ -43,7 +43,6 @@ uint32_t interval_with_jitter(void)
 }
 uint8_t borderRouteChangeCnt = 0;
 uint8_t borderRouterLC = 0;
-uint8_t brCacheIndex = 0;
 char nexthopBuffer[40];
 
 uint32_t addressMsgCnt = 0;
