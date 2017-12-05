@@ -44,7 +44,7 @@ uint32_t interval_with_jitter(void)
 uint8_t borderRouteChangeCnt = 0;
 uint8_t borderRouterLC = 0;
 uint8_t brCacheIndex = 0;
-char nexthopBuffer[32];
+char nexthopBuffer[40];
 
 uint32_t addressMsgCnt = 0;
 uint32_t joiningMsgCnt = 0;
@@ -84,12 +84,12 @@ int main(void)
 	otIp6AddressFromString("fdde:ad00:beef:0000:c684:4ab6:ac8f:9fe5", &messageInfo.mPeerAddr);
     messageInfo.mPeerPort = 1234;
     messageInfo.mInterfaceId = 1;
-    char buf[76];
-    for (int i =0; i<76; i++) {
+    char buf[84];
+    for (int i =0; i<84; i++) {
         buf[i] = 0xff;
     }
 
-    for (int i = 0; i < 76; i++) {
+    for (int i = 0; i < 84; i++) {
         buf[i] = 0x0;
     }
 	
@@ -174,7 +174,7 @@ int main(void)
         buf[41] = (broadcastCnt >> 16) & 0xff; 
         buf[40] = (broadcastCnt >> 24) & 0xff;
 
-        for (int i = 0; i < 32; i++) {
+        for (int i = 0; i < 40; i++) {
             buf[i+44] = nexthopBuffer[i];
         }
 
@@ -189,11 +189,11 @@ int main(void)
         // Source addr setting
         uint8_t source = OPENTHREAD_SOURCE;
         buf[0] = source;
-        error = otMessageSetLength(message, 76);
+        error = otMessageSetLength(message, 84);
         if (error != OT_ERROR_NONE) {
             printf("error in set length\n");
         }
-        otMessageWrite(message, 0, buf, 76);
+        otMessageWrite(message, 0, buf, 84);
 		
         DEBUG("[Main] Tx UDP packet\n");
         error = otUdpSend(&mSocket, message, &messageInfo);
