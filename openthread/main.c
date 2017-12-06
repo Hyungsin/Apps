@@ -119,7 +119,6 @@ int main(void)
         buf[15] = (addressMsgCnt >> 16) & 0xff;
         buf[14] = (addressMsgCnt >> 24) & 0xff;
 
-        // next hop change number
         buf[13] = borderRouteChangeCnt;
 
         // Link quality, next hop, path cost
